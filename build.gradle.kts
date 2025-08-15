@@ -21,11 +21,17 @@ configurations {
     }
 }
 
+extra["springCloudGcpVersion"] = "7.1.0"
+extra["springCloudVersion"] = "2025.0.0"
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    implementation("com.google.cloud:spring-cloud-gcp-data-firestore")
+    implementation("com.google.cloud:spring-cloud-gcp-starter-data-firestore")
+    implementation("com.google.cloud:spring-cloud-gcp-starter")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     compileOnly("org.projectlombok:lombok")
@@ -33,6 +39,16 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("jakarta.mail:jakarta.mail-api")
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("com.google.cloud:spring-cloud-gcp-dependencies:${property("springCloudGcpVersion")}")
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+    }
 }
 
 kotlin {
