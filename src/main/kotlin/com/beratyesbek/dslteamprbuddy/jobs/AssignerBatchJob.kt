@@ -5,6 +5,7 @@ import com.beratyesbek.dslteamprbuddy.repository.UserRepository
 import jakarta.mail.internet.MimeMessage
 import lombok.RequiredArgsConstructor
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
@@ -21,6 +22,9 @@ class AssignerBatchJob(
     val defaultReviewerRepository: DefaultReviewerRepository,
     val mailSender: JavaMailSender
 ) {
+
+    @Value("\${spring.mail.username}")
+    var from: String = ""
 
     @Bean
     fun taskRunner() = ApplicationRunner { _: ApplicationArguments ->
@@ -157,7 +161,7 @@ class AssignerBatchJob(
             if (emailAddress != null) {
                 val message: MimeMessage = mailSender.createMimeMessage()
                 val helper = MimeMessageHelper(message, true)
-                helper.setFrom("berat.yesbek@crystalloids.com")
+                helper.setFrom(from)
                 helper.setTo(emailAddress)
                 helper.setSubject("Your PR Review Assignments for This Week")
 
