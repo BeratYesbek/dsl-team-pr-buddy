@@ -1,6 +1,7 @@
 package com.beratyesbek.dslteamprbuddy.jobs
 
 import com.beratyesbek.dslteamprbuddy.repository.DefaultReviewerRepository
+import com.beratyesbek.dslteamprbuddy.repository.TeamRepository
 import com.beratyesbek.dslteamprbuddy.repository.UserRepository
 import jakarta.mail.internet.MimeMessage
 import lombok.RequiredArgsConstructor
@@ -19,6 +20,7 @@ import kotlin.random.Random
 @RequiredArgsConstructor
 class AssignerBatchJob(
     val userRepository: UserRepository,
+    val teamRepository: TeamRepository,
     val defaultReviewerRepository: DefaultReviewerRepository,
     val mailSender: JavaMailSender
 ) {
@@ -26,11 +28,17 @@ class AssignerBatchJob(
     @Value("\${spring.mail.username}")
     var from: String = ""
 
+    @Value("\${team.teamId}")
+    var teamId: String = ""
+
+
     @Bean
     fun taskRunner() = ApplicationRunner { _: ApplicationArguments ->
         val logger = LoggerFactory.getLogger(AssignerBatchJob::class.java)
-
-        val users = userRepository.findAll().collectList().block() ?: emptyList()
+        val team = teamRepository.findById(teamId).block()
+        val users = userRepository.findAllByTeamId("")
+            .collectList()
+            .block() ?: emptyList()
         val defaultReviewers = defaultReviewerRepository.findAll().collectList().block() ?: emptyList()
 
         val devs = users.filter { it.isAvailable }.map { it.name }
@@ -173,7 +181,7 @@ class AssignerBatchJob(
                     <p>Please ensure to review their PRs in a timely manner.</p>
                     <p>Full assignments for the team:</p>
                     $tableHtml
-                    <p>Best regards,<br>DSL Team PR Buddy</p>
+                    <p>Best regards,<br>${team?.name} Team PR Buddy</p>
                     </body>
                     </html>
                 """.trimIndent()
