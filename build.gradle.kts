@@ -41,6 +41,9 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("jakarta.mail:jakarta.mail-api")
+    implementation("org.springframework:spring-web")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.google.genai:google-genai:1.13.0")
 
 }
 

@@ -3,6 +3,7 @@ package com.beratyesbek.dslteamprbuddy.jobs
 import com.beratyesbek.dslteamprbuddy.repository.DefaultReviewerRepository
 import com.beratyesbek.dslteamprbuddy.repository.TeamRepository
 import com.beratyesbek.dslteamprbuddy.repository.UserRepository
+import com.beratyesbek.dslteamprbuddy.service.AiMessageService
 import jakarta.mail.internet.MimeMessage
 import lombok.RequiredArgsConstructor
 import org.slf4j.LoggerFactory
@@ -13,12 +14,14 @@ import org.springframework.context.annotation.Bean
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.stereotype.Component
+import org.springframework.web.util.HtmlUtils
 import java.time.LocalDateTime
 import kotlin.random.Random
 
 @Component
 @RequiredArgsConstructor
 class AssignerBatchJob(
+    val aiMessageService: AiMessageService,
     val userRepository: UserRepository,
     val teamRepository: TeamRepository,
     val defaultReviewerRepository: DefaultReviewerRepository,
@@ -36,7 +39,7 @@ class AssignerBatchJob(
     fun taskRunner() = ApplicationRunner { _: ApplicationArguments ->
         val logger = LoggerFactory.getLogger(AssignerBatchJob::class.java)
         val team = teamRepository.findById(teamId).block()
-        val users = userRepository.findAllByTeamId("")
+        val users = userRepository.findAllByTeamId(team?.id ?: "unknown")
             .collectList()
             .block() ?: emptyList()
         val defaultReviewers = defaultReviewerRepository.findAll().collectList().block() ?: emptyList()
@@ -172,16 +175,23 @@ class AssignerBatchJob(
                 helper.setFrom(from)
                 helper.setTo(emailAddress)
                 helper.setSubject("Your PR Review Assignments for This Week")
+                val generatedAiMessage = aiMessageService.generateMessage(
+                    reviewer,
+                    devList,
+                    team?.name ?: "Unknown Team",
+                    users.find { it.name == reviewer }?.mainLanguage ?: "English"
+                )
+                val aiMessageHtml = HtmlUtils.htmlEscape(generatedAiMessage?.trim().orEmpty())
+                    .replace("\r\n", "\n")
+                    .replace("\r", "\n")
+                    .replace("\n", "<br>")
 
                 val emailBody = """
                     <html>
                     <body>
-                    <p><b>Dear</b> $reviewer,</p>
-                    <p>You are assigned to review PRs from the following developers this week: <b>${devList.joinToString(", ")}</b></p>
-                    <p>Please ensure to review their PRs in a timely manner.</p>
+                    $aiMessageHtml
                     <p>Full assignments for the team:</p>
                     $tableHtml
-                    <p>Best regards,<br>${team?.name} Team PR Buddy</p>
                     </body>
                     </html>
                 """.trimIndent()
