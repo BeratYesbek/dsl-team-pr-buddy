@@ -44,7 +44,12 @@ dependencies {
     implementation("org.springframework:spring-web")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.google.genai:google-genai:1.13.0")
-
+    implementation("com.mailjet:mailjet-client:6.0.0")
+    implementation("com.google.cloud:spring-cloud-gcp-starter-secretmanager")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.mockito:mockito-core:5.12.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
 
 dependencyManagement {
